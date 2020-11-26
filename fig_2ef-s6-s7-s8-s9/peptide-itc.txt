@@ -1,0 +1,7 @@
+protein,peptide,Ka,Ka_err
+hA5,A5cons,3.60e5,2.1e5
+hA5,A6cons,4.10e5,9.8e4
+aA5A6,A5cons,9.3e4,3.0e4
+aA5A6,A6cons,8.3e5,1.9e5
+hA6,A5cons,NA,NA
+hA6,A6cons,2.00e5,4.8e4
