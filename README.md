@@ -1,15 +1,13 @@
 # Were Ancestral Proteins Less Specific?
 
-Wheeler & Harms: https://doi.org/10.1101/2020.05.27.120261
-
-
+This repository contains the files and scripts necessary to reproduce the analyses and generate the graphs shown in manuscript by Wheeler & Harms entitled "Were Ancestral Proteins Less Specific?" https://doi.org/10.1101/2020.05.27.120261. 
 
 ## I. Repository structure
 
 #### Contents
 
 + `enrichment_files`: directory containing enrichment files.  This files in this directory are used by all of the jupyter noteboooks used in the analysis. 
-+ `run_whole_pipeline`: scripts that will allow recreation of the files in `enrichment_files` from the Illumina output available from the NCBI SRA database. 
++ `run_whole_pipeline`: scripts that will allow re-creation of the files in `enrichment_files` from the Illumina output available from the NCBI SRA database. 
 + `fig_2cd-s4`: jupyter notebook and files to reproduce figures 2C, 2D and S4 (enrichment files)
 + `fig_3` jupyter notebook and files to reproduce figure 3 (Venn diagrams and related analyses)
 + `fig_4` jupyter notebook and files to reproduce figure 4 (peptide number change since ancestor)
@@ -84,6 +82,8 @@ To calculate enrichments from the fastq files:
 cd run_whole_pipeline
 bash fastq-to-enrichment.sh
 ```
+
+This script took about X hours to run on a 2019 macbook. 
 
 ### Detailed breakdown of steps:
 
