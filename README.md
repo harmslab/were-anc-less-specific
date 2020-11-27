@@ -1,19 +1,19 @@
 # Were Ancestral Proteins Less Specific?
 
-This repository contains the files and scripts necessary to reproduce the analyses and generate the graphs shown in manuscript by Wheeler & Harms entitled "Were Ancestral Proteins Less Specific?" https://doi.org/10.1101/2020.05.27.120261. 
+This repository contains the files and scripts necessary to reproduce the analyses and generate the graphs shown in the manuscript by Wheeler & Harms entitled "Were Ancestral Proteins Less Specific?" https://doi.org/10.1101/2020.05.27.120261. 
 
 ## I. Repository structure
 
 #### Contents
 
 + `enrichment_files`: directory containing enrichment files.  This files in this directory are used by all of the jupyter noteboooks used in the analysis. 
-+ `run_whole_pipeline`: scripts that will allow re-creation of the files in `enrichment_files` from the Illumina output available from the NCBI SRA database. 
-+ `fig_2cd-s4`: jupyter notebook and files to reproduce figures 2C, 2D and S4 (enrichment files)
++ `run_whole_pipeline`: scripts that will allow re-creation of the files in `enrichment_files` from the Illumina fastq files uploaded to the NCBI SRA database. 
++ `fig_2cd-s4`: jupyter notebook and files to reproduce figures 2C, 2D and S4 (analysis of peptide enrichment)
 + `fig_3` jupyter notebook and files to reproduce figure 3 (Venn diagrams and related analyses)
-+ `fig_4` jupyter notebook and files to reproduce figure 4 (peptide number change since ancestor)
++ `fig_4` jupyter notebook and files to reproduce figure 4 (change in peptide numbers since ancestor)
 + `fig_s2` jupyter notebook and files to reproduce figure S2 (identifying minimum read count cutoff)
 + `fig_s3` jupyter notebook and files to reproduce figure S3D (estimating enrichment from clusters versus indivdual sequences)
-+ `fig_s4` files to reproduce figure S4
++ `fig_s4` files to reproduce figure S4 (enrichment distribution)
 + `fig_s5` jupyter notebook and files to reproduce figure S5 (identifying posterior probability for peptide enrichment cutoff)
 + `fig_2ef-s6-s7-s8-s9` jupyter notebook and files to reproduce figures 2E, 2F, and S6 through S9 (peptide binding experiments)
 
@@ -47,8 +47,6 @@ Throughout this repository, samples are labeled by the following convention **PR
 + Install the [venninator](https://github.com/harmslab/venninator/releases/tag/v0.1) package. (Linked v0.1 release is the software used in the publication.)
 + If you intend to run our scripts to download our raw sequencing reads from scratch, install and configure the [SRA toolkit](https://www.ncbi.nlm.nih.gov/sra/docs/sradownload/#download-sequence-data-files-usi). 
 
-
-
 ## II. Determine Enrichment of Peptides
 
 ### Experimental Design:
@@ -74,7 +72,7 @@ cd run_whole_pipeline
 bash download-sra.sh sra-files.txt
 ```
 
-In 2020, this script took about 4 hours to run on a 100 Mbit residential connection with a 2019 macbook. It will create about 10 Gb of `fastq.gz` files. 
+In 2020, this script took about 3 hours to run on a 100 Mbit residential connection with a 2018 macbook pro. It will create about 10 Gb of `fastq.gz` files. 
 
 To calculate enrichments from the fastq files:
 
@@ -83,7 +81,7 @@ cd run_whole_pipeline
 bash fastq-to-enrichment.sh
 ```
 
-This script took about X hours to run on a 2019 macbook. 
+This script took about 4 hours to run on a 2018 macbook pro.
 
 ### Detailed breakdown of steps:
 
@@ -133,19 +131,21 @@ hops_count hA5.fastq.gz -o hA5.counts
    rm -f tmp
    ```
 
-2. Cluster all sequences using dbscan.  In the manuscript, we used a neighborhood value ($\varepsilon$) equal to one, meaning the algorithm only looks one amino acid step away when constructing the clusters. We also set the minimum cluster size to 2. The following call will reproduce this for hA5. 
+2. Cluster all sequences by Hamming distance using dbscan.  In the manuscript, we used a neighborhood value (epsilon) equal to one, meaning the algorithm only looks one amino acid step away when constructing the clusters. We also set the minimum cluster size to 2. The following call will reproduce this for hA5 replicate 1. 
 
    ```
-   hops_cluster hA5_1_all-seq.txt -s 2 -e 1 -o hA5_1.cluster
+   hops_cluster hA5_1_all-seq.txt -s 2 -e 1 -d simple -o hA5_1.cluster
    ```
 
 #### 3. Measure the enrichment of sequences with and without competitor
 
-1. Calculate enrichment in the conventional versus competitor experiment using `hops_enrich`.  Only include samples where the number of counts is six or great. 
+Calculate enrichment in the conventional versus competitor experiment using `hops_enrich`.  Only include samples where the number of counts is six or great. 
 
-   ```
-   hops_enrich hA5_conv_1.counts hA5_comp_1.counts -f hA5_1.cluster -m 6 -o hA5_1.enrich
-   ```
+```
+hops_enrich hA5_conv_1.counts hA5_comp_1.counts -f hA5_1.cluster -m 6 -o hA5_1.enrich
+```
 
+## III. Figures
 
+Each figure directory contains data files, jupyter notebooks, and scripts necessary to reproduce the indicated figures. 
 
