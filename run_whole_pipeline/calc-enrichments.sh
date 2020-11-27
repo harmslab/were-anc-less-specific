@@ -29,7 +29,7 @@ for all_seq_file in *_all_pooled.counts; do
     out_file=`echo ${all_seq_file} | sed 's/.counts/.cluster/'`
     echo "Clustering ${out_file}"
     awk '{print $1}' ${all_seq_file} > tmp
-    hops_cluster tmp -s 2 -e 1 -o ${out_file}
+    hops_cluster tmp -s 2 -e 1 -d simple -o ${out_file}
     rm -f tmp
 done
 

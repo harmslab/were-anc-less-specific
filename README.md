@@ -72,7 +72,7 @@ cd run_whole_pipeline
 bash download-sra.sh sra-files.txt
 ```
 
-In 2020, this script took about 3 hours to run on a 100 Mbit residential connection with a 2019 macbook pro. It will create about 10 Gb of `fastq.gz` files. 
+In 2020, this script took about 3 hours to run on a 100 Mbit residential connection with a 2018 macbook pro. It will create about 10 Gb of `fastq.gz` files. 
 
 To calculate enrichments from the fastq files:
 
@@ -81,7 +81,7 @@ cd run_whole_pipeline
 bash fastq-to-enrichment.sh
 ```
 
-This script took about 9 hours to run on a 2019 macbook pro.
+This script took about 4 hours to run on a 2018 macbook pro.
 
 ### Detailed breakdown of steps:
 
@@ -131,10 +131,10 @@ hops_count hA5.fastq.gz -o hA5.counts
    rm -f tmp
    ```
 
-2. Cluster all sequences using dbscan.  In the manuscript, we used a neighborhood value (epsilon) equal to one, meaning the algorithm only looks one amino acid step away when constructing the clusters. We also set the minimum cluster size to 2. The following call will reproduce this for hA5. 
+2. Cluster all sequences by Hamming distance using dbscan.  In the manuscript, we used a neighborhood value (epsilon) equal to one, meaning the algorithm only looks one amino acid step away when constructing the clusters. We also set the minimum cluster size to 2. The following call will reproduce this for hA5 replicate 1. 
 
    ```
-   hops_cluster hA5_1_all-seq.txt -s 2 -e 1 -o hA5_1.cluster
+   hops_cluster hA5_1_all-seq.txt -s 2 -e 1 -d simple -o hA5_1.cluster
    ```
 
 #### 3. Measure the enrichment of sequences with and without competitor
