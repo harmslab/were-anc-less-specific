@@ -42,7 +42,7 @@ Throughout this repository, samples are labeled by the following convention **PR
 
 #### Computing environment
 
-+ This analysis assumes a modern scientific python computing environment (python 3.x, jupyter, numpy, scipy, matplotlib, and pandas). It will also install a few other dependences (emcee and corner). We have tested this pipeline in linux (Ubuntu 16.4) and macOS (10.15 Catalina).  In principle it should work in windows, but we have not tested it. 
++ This analysis assumes a modern scientific python computing environment (python 3.x, jupyter, numpy, scipy, matplotlib, and pandas). It will also install a few other dependences (emcee and corner). We have tested this pipeline in linux (Ubuntu 16.4 and 18.04) and macOS (10.15 Catalina).  In principle it should work in windows, but we have not tested it. 
 + Install the [hops_enrich](https://github.com/harmslab/hops_enrich/releases/tag/v0.1) package. (Linked v0.1 release is the software used in the publication.)
 + Install the [venninator](https://github.com/harmslab/venninator/releases/tag/v0.1) package. (Linked v0.1 release is the software used in the publication.)
 + If you intend to run our scripts to download our raw sequencing reads from scratch, install and configure the [SRA toolkit](https://www.ncbi.nlm.nih.gov/sra/docs/sradownload/#download-sequence-data-files-usi). 
@@ -78,7 +78,7 @@ To calculate enrichments from the fastq files:
 
 ```
 cd run_whole_pipeline
-bash fastq-to-enrichment.sh
+bash calc-enrichments.sh
 ```
 
 This script took about 4 hours to run on a 2018 macbook pro.
