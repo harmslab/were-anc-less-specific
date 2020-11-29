@@ -57,3 +57,5 @@ done
 ./pool_replicates.py aA5A6_conv_pooled.counts aA5A6_comp_pooled.counts aA5A6_all_pooled.counts
 ./pool_replicates.py alt_conv_pooled.counts alt_comp_pooled.counts alt_all_pooled.counts
 
+# Copy counts to enrichment_files directory
+cp *.counts ../enrichment_files
