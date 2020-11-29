@@ -9,8 +9,7 @@ This repository contains the files and scripts necessary to reproduce the analys
 + `download-and-count`: scripts that will allow reproduction of the `counts` files in `fig_2cd-s3-s4-s5` from Illumina fastq files uploaded to the NCBI SRA database. 
 + `fig_2cd-s3-s4-s5` notebooks and scripts to reproduce peptide enrichment calculations.  Reproduces Fig 2C & D, S3, S4, and S5. 
 + `fig_2ef-s6-s7-s8-s9` notebooks, scripts, and raw data to reproduce the peptide binding experimental analyses.  Reproduces Fig 2E & F, S6, S7, S8, and S9. 
-+ `fig_3` jupyter notebook and files to reproduce figure 3 (Venn diagrams and related analyses)
-+ `fig_4` jupyter notebook and files to reproduce figure 4 (change in peptide numbers since ancestor)
++ `fig_3-4` jupyter notebook and files to analyze set overlap (Venn diagrams and related).  Reproduces Fig 3 and 4. 
 + `fig_s2` jupyter notebook and files to reproduce figure S2 (identifying minimum read count cutoff)
 
 #### Naming conventions
@@ -40,7 +39,7 @@ Throughout this repository, samples are labeled by the following convention **PR
 
 + This analysis assumes a modern scientific python computing environment (python 3.x, jupyter, numpy, scipy, matplotlib, and pandas). It will also install a few other dependences (emcee and corner). We have tested this pipeline in linux (Ubuntu 16.4 and 18.04) and macOS (10.15 Catalina).  In principle it should work in windows, but we have not tested it. 
 + Install the [hops_enrich](https://github.com/harmslab/hops_enrich/releases/tag/v0.1) package. (Linked v0.1 release is the software used in the publication.)
-+ Install the [venninator](https://github.com/harmslab/venninator/releases/tag/v0.1) package. (Linked v0.1 release is the software used in the publication.)
++ Install the [venninator](https://github.com/harmslab/venninator/releases/tag/v0.1.1) package. (Linked v0.1.1 release is the software used in the publication.)
 + If you intend to run our scripts to download our raw sequencing reads from scratch, install and configure the [SRA toolkit](https://www.ncbi.nlm.nih.gov/sra/docs/sradownload/#download-sequence-data-files-usi). 
 
 ## II. Determine Enrichment of Peptides
