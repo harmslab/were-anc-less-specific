@@ -58,4 +58,4 @@ done
 ./pool_replicates.py alt_conv_pooled.counts alt_comp_pooled.counts alt_all_pooled.counts
 
 # Copy counts to enrichment_files directory
-cp *.counts ../enrichment_files
+cp *.counts ../fig_2cd-s3-s4-s5
