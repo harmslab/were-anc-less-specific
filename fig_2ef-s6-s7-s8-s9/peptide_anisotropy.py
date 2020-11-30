@@ -11,12 +11,12 @@ import numpy as np
 import pandas as pd
 import scipy.optimize
 
-import re
+import re, string
 
 def calculate_r(vv,vh,G=1.0):
     """
     Calculate anisotropy from vertical (vv), horizontal (vh), and empirical
-    G-factor (G). 
+    G-factor (G).
     """
 
     return (vv - G*vh)/(vv + 2*G*vh)
@@ -119,13 +119,31 @@ def read_plate_layout(plate_layout):
     return plates
 
 
-def read_file(plate_file,plate_layout,min_value=5e4,G=1.0):
+
+def read_custom_g_plate(plate_file):
+    """
+    Read spreadsheet holding of plate position-calibrated G-factors.
+    """
+
+    df = pd.read_excel(plate_file,header=None)
+
+    G_array = np.ones((8,12),dtype=np.float)
+    for i in range(1,len(df)):
+        row = np.array(df.iloc[i])
+        for j in range(1,len(row)):
+            G_array[i-1,j-1] = row[j]
+
+    return G_array
+
+def read_file(plate_file,plate_layout,min_value=5e4,G=1.0,custom_g_plate=None):
     """
     plate_file: output from the plate reader
     plate_layout: excel file denoting plate layout
     min_value: if not none, make any value below this NaN.  only applies to
                values in the main plate, not any named data.
     G: G-factor for anisotropy
+    custom_g_plate: spreadsheet holding custom G-factors for each position. If
+                    None, use G for all positions.
 
     Inputs
     ------
@@ -182,6 +200,11 @@ def read_file(plate_file,plate_layout,min_value=5e4,G=1.0):
     f = open(plate_file,'rb')
     data = f.read().decode("utf16")
     f.close()
+
+    if custom_g_plate is None:
+        G_array = G*np.ones((8,12),dtype=np.float)
+    else:
+        G_array = read_custom_g_plate(custom_g_plate)
 
     # Create out dictionary for main data
     out_dict = {"plate":[],
@@ -256,11 +279,15 @@ def read_file(plate_file,plate_layout,min_value=5e4,G=1.0):
     # Make data frame from output
     df = pd.DataFrame(out_dict)
 
+    # Map row (A,B,C etc. to index)
+    row_to_index = dict([(u,i) for i, u in enumerate(string.ascii_uppercase)])
+
     # Now use plate_layout to map these values to main data frame or
     # named data.
     conc = []
     protein = []
     peptide = []
+    G_factor = []
     for i in range(len(df)):
 
         # Get plate, row, and column
@@ -268,6 +295,12 @@ def read_file(plate_file,plate_layout,min_value=5e4,G=1.0):
         row = df.iloc[i].plate_row
         col = df.iloc[i].plate_column
         c = plates[p-1]["conc"][(row,col)]
+
+        row_index = row_to_index[row]
+        col_index = col - 1
+
+        # Get G for this position in the plate
+        G_factor.append(G_array[row_index,col_index])
 
         # If this is a concentration, record it
         if type(c) is float:
@@ -305,6 +338,7 @@ def read_file(plate_file,plate_layout,min_value=5e4,G=1.0):
     df["protein"] = protein
     df["peptide"] = peptide
     df["conc"] = conc
+    df["G"] = G_factor
 
     # Set things below min value to nan
     if min_value is not None:
@@ -316,7 +350,7 @@ def read_file(plate_file,plate_layout,min_value=5e4,G=1.0):
     df = df[np.logical_not(np.isnan(df.conc))]
     df = df[np.logical_not(np.isnan(df.c1))]
     df = df[np.logical_not(np.isnan(df.c2))]
-    df["r"] = calculate_r(df.c2,df.c1,G=G)
+    df["r"] = calculate_r(df.c2,df.c1,G=df.G)
 
     # Clean up
     df["plate"] = df["plate"].astype(int)
@@ -338,26 +372,23 @@ def average_tech_reps(df,
                       min_next_ratio=0.1,
                       same_dist_ratio=0.7):
     """
-    Take the dataframe output from read_file and average the tehnical 
+    Take the dataframe output from read_file and average the tehnical
     replicates.  Do some data clean up.
 
     df: data frame from read_file
-    If remove_outlier is True, the function will look for tech reps with a 
-    standard deviation greater than "outlier_min_std."  An outlier will be 
+    If remove_outlier is True, the function will look for tech reps with a
+    standard deviation greater than "outlier_min_std."  An outlier will be
     identified if the ratio between the distances between the furthest points
-    is less than min_next_ratio and the ratio between the distances between 
-    the closest two points is grater than same_dist_ratio. 
-  
-    outlier
-         +                               +
-          +
-    
-    no outlier
+    is less than min_next_ratio and the ratio between the distances between
+    the closest two points is grater than same_dist_ratio.
 
+    remove outlier
+         ++                               +
+
+    no outlier
         +                 +              +
 
     no outlier
-
         +++
     """
 
@@ -381,23 +412,24 @@ def average_tech_reps(df,
     # Go through all concentrations
     for c in np.unique(df.conc):
 
-        # Get values for this concentration 
+        # Get values for this concentration
         df_c = df[df.conc == c]
         columns = np.array(df_c.plate_column)
 
+        v = np.array(df_c.r)
+
         # See if there is an outlier
         outlier_removed = False
-        v = np.array(df_c.r)
-        if  len(v) == 3 and np.std(v) > outlier_min_std:
+        if remove_outlier:
+            if  len(v) == 3 and np.std(v) > outlier_min_std:
+                D = np.array(((v[0] - v[1])**2,(v[0] - v[2])**2,(v[1] - v[2])**2))
+                closest = to_keep[np.argmin(D)]
 
-            D = np.array(((v[0] - v[1])**2,(v[0] - v[2])**2,(v[1] - v[2])**2))
-            closest = to_keep[np.argmin(D)]
-
-            D.sort()
-            if D[0]/D[1] < min_next_ratio and D[1]/D[2] > same_dist_ratio:
-                v = v[closest]
-                columns = columns[closest]
-                outlier_removed = True
+                D.sort()
+                if D[0]/D[1] < min_next_ratio and D[1]/D[2] > same_dist_ratio:
+                    v = v[closest]
+                    columns = columns[closest]
+                    outlier_removed = True
 
         # record to write out in data frame
         fit_dict["protein"].append(df_c["protein"].iloc[0])
@@ -405,7 +437,7 @@ def average_tech_reps(df,
         fit_dict["conc"].append(c*1e-6)
         fit_dict["r_err"].append(np.std(v))
         fit_dict["r"].append(np.mean(v))
-        fit_dict["weight"].append(1.0) 
+        fit_dict["weight"].append(1.0)
         fit_dict["outlier_removed"].append(outlier_removed)
         fit_dict["plate"].append(df_c["plate"].iloc[0])
         fit_dict["plate_row"].append(df_c["plate_row"].iloc[0])
@@ -436,11 +468,13 @@ def load_data(experiments,
 
             [{"protein":"hA6",
               "name_in_file":"hA6_4.3",
-              "Kd":45,
-              "prot_conc":4.2,
-              "probe_conc":4.2,
+              "Kd":45,                  # probe Kd (uM)
+              "max_dA":0.15,            # maximum change in anisotropy for probe
+              "prot_conc":4.2,          # prot conc in experiment (uM)
+              "probe_conc":4.2,         # prob conc in experiment (uM)
               "data_file":"13_main-collection.txt",
-              "plate_file":"13_plate-layout.xlsx"},...]
+              "plate_file":"13_plate-layout.xlsx",
+              "custom_g_plate":"custom-g-factor.xlsx"},...] # optional custom G-factor
 
     remove_outlier: whether or not to look for outlier points and remove them
                     when averaging technical reps
@@ -461,7 +495,12 @@ def load_data(experiments,
 
     all_df = []
     for expt in experiments:
-        df, _ = read_file(expt["data_file"],expt["plate_file"])
+        try:
+            custom_g_plate = expt["custom_g_plate"]
+        except KeyError:
+            custom_g_plate = None
+
+        df, _ = read_file(expt["data_file"],expt["plate_file"],custom_g_plate=custom_g_plate)
         df = df[df.protein == expt["name_in_file"]]
 
         peptide_Kd_scalar = get_peptide_Kd_scalar(Kd=expt["Kd"],
@@ -496,6 +535,11 @@ def load_data(experiments,
                         fit_df["name_in_file"] = expt["name_in_file"]
                         fit_df["plate_number"] = plate
 
+                        fit_df["prot_conc"] = [expt["prot_conc"] for _ in range(len(fit_df["protein"]))]
+                        fit_df["probe_conc"] = [expt["probe_conc"] for _ in range(len(fit_df["protein"]))]
+                        fit_df["probe_Kd"] = [expt["Kd"] for _ in range(len(fit_df["protein"]))]
+                        fit_df["max_dA"] = [expt["max_dA"] for _ in range(len(fit_df["protein"]))]
+
                         all_df.append(fit_df)
 
                     break
@@ -509,27 +553,27 @@ def load_data(experiments,
 
 def single_site(x,Kd,A,B):
     """
-    First-order binding model model. 
+    First-order binding model model.
     """
-    
+
     return A + B*(x/(x + Kd))
 
 def single_site_r(param,x,obs,weights,fixed_A,fixed_B):
     """
     Residuals function for first-order model.
     """
-    
+
     Kd = param[0]
     if fixed_A is None:
         A = param[1]
     else:
         A = fixed_A
-        
+
     if fixed_B is None:
         B = param[2]
     else:
         B = fixed_B
-    
+
     return (single_site(x,Kd,A,B) - obs)*weights
 
 def fit_model(x,obs,weights,param_guesses=(1,1,1),fixed_A=None,fixed_B=None):
@@ -540,7 +584,7 @@ def fit_model(x,obs,weights,param_guesses=(1,1,1),fixed_A=None,fixed_B=None):
     if ((fixed_A is None or fixed_B is None) and not (fixed_A is None and fixed_B is None)):
         err = "You must fix neither A nor B, or both A and B.\n"
         raise ValueError(err)
-    
+
     fit = scipy.optimize.least_squares(single_site_r,
                                        param_guesses,
                                        args=(x,obs,weights,fixed_A,fixed_B))
@@ -553,7 +597,7 @@ def fit_model(x,obs,weights,param_guesses=(1,1,1),fixed_A=None,fixed_B=None):
         fit_B = fixed_B
     else:
         fit_B = fit.x[2]
-    
+
     return fit_Kd, fit_A, fit_B
 
 
@@ -580,14 +624,14 @@ def fit_and_plot(df_list,
 
         A_guess = np.max(fit_df.r)
         B_guess = np.min(fit_df.r) - A_guess
-        
+
         if baseline_list is not None:
             fixed_A = baseline_list[i][0]
             fixed_B = baseline_list[i][1]
         else:
             fixed_A = None
             fixed_B = None
-        
+
         try:
             fit_Kd, fit_A, fit_B = fit_model(fit_df.conc,
                                              fit_df.r,
@@ -597,23 +641,23 @@ def fit_and_plot(df_list,
                                              fixed_B=fixed_B)
             conditions = [fit_Kd > 1e-7,
                           fit_Kd < 1e-3]
-            
+
             if required_change_in_signal is not None:
                 conditions.append(fit_B < required_change_in_signal)
 
             if np.sum(conditions) != len(conditions):
                 keep_fit = False
-                
+
         except ValueError:
             keep_fit = False
-            
+
         if not keep_fit:
             fit_Kd = np.nan
             fit_A = np.nan
             fit_B = np.nan
-            
+
         all_fits.append((fit_Kd,fit_A,fit_B))
-        
+
         # Offset data so it starts at 0
         if keep_fit and offset_to_reference:
             fit_df.loc[:,"r"] = fit_df.loc[:,"r"] - fit_A
@@ -622,11 +666,11 @@ def fit_and_plot(df_list,
                                              fit_df.weight,
                                              param_guesses=(Kd_guess,A_guess,B_guess),
                                              fixed_A=0,fixed_B=fit_B)
-            
+
         if not plot:
             return None, None, all_fits
-            
-        
+
+
         kwargs = {"fmt":"o",
                   "capsize":4,
                   "alpha":alpha}
@@ -641,13 +685,13 @@ def fit_and_plot(df_list,
                 label = "{} (Kd: {:.1f} uM)".format(name_list[i],fit_Kd*1e6)
 
             kwargs["label"] = label
-            
+
 
         if plot_err:
             err = fit_df.r_err
         else:
             err = None
-            
+
         ax.errorbar(fit_df.conc*1e6,fit_df.r,err,**kwargs)
 
         if keep_fit:
