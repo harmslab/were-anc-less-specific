@@ -8,8 +8,8 @@ This repository contains the files and scripts necessary to reproduce the analys
 
 + `download-and-count`: scripts that will allow reproduction of the `counts` files in `fig_2cd-s3-s4-s5` from Illumina fastq files uploaded to the NCBI SRA database. 
 + `fig_2cd-s3-s4-s5` notebooks and scripts to reproduce peptide enrichment calculations.  Reproduces Fig 2C & D, S3, S4, and S5. 
-+ `fig_2ef-s6-s7-s8-s9` notebooks, scripts, and raw data to reproduce the peptide binding experimental analyses.  Reproduces Fig 2E & F, S6, S7, S8, and S9. 
-+ `fig_3-4` jupyter notebook and files to analyze set overlap (Venn diagrams and related).  Reproduces Fig 3 and 4. 
++ `fig_3-s6-s7-s8-s9` notebooks, scripts, and raw data to reproduce the peptide binding experimental analyses.  Reproduces Fig 3, S6, S7, S8, and S9. 
++ `fig_4-5` jupyter notebook and files to analyze set overlap (Venn diagrams and related).  Reproduces Fig 4 and 5. 
 + `fig_s2` jupyter notebook and files to reproduce figure S2 (identifying minimum read count cutoff)
 
 #### Naming conventions
@@ -55,10 +55,9 @@ We panned a commercial library of randomized 12-mer peptides expressed as fusion
 0. Obtain the fastq files (for example, `hA5_conv_1.fastq.gz` and `hA5_comp_1.fastq.gz`)
 
 1. Count the number of times each peptide is seen in the fastq file (`hA5_conv_1.counts` and `hA5_comp_1.counts` for example)
-2. Create clusters of peptides seen in the counts files (`hA5_1.cluster`)
-3. Calculate enrichments for each peptide by comparing counts in conventional and competitor experiments (`hA5_1.enrich`)
+2. Create clusters of peptides seen in the counts files (`hA5_1.cluster`) and calculate enrichments for each peptide by comparing counts in conventional and competitor experiments (`hA5_1.enrich`).  
 
-### Quick start to run 0-4:
+### To run 0-2:
 
 To download the fastq files from the NCBI and generate peptide counts, run:
 
@@ -71,7 +70,7 @@ In 2020, this script took about 6 hours to run on a 100 Mbit residential connect
 
 To calculate enrichments from the counts files, run the `fig_2cd-s3-s4-s5/fig_2cd-s3-s4-s5.ipynb` jupyter notebook. 
 
-### Detailed breakdown of steps:
+### Detailed breakdown of steps 0 and 1:
 
 #### 0. Obtain the fastq files:
 
@@ -106,31 +105,6 @@ Calculate the the number of time each peptide is seen in the relavent `.fastq.gz
 
 ```
 hops_count hA5.fastq.gz -o hA5.counts
-```
-
-#### 2. Cluster all sequences observed in the the normal and competitor experiments
-
-1. Create a file containing all sequences observed in all experiments with a given protein.  
-
-   ```
-   awk '{print $1}' hA5_conv_1.counts > tmp
-   awk '{print $1}' hA5_comp_1.counts >> tmp
-   sort tmp | uniq > hA5_1_all-seq.txt
-   rm -f tmp
-   ```
-
-2. Cluster all sequences by Hamming distance using dbscan.  In the manuscript, we used a neighborhood value (epsilon) equal to one, meaning the algorithm only looks one amino acid step away when constructing the clusters. We also set the minimum cluster size to 2. The following call will reproduce this for hA5 replicate 1. 
-
-   ```
-   hops_cluster hA5_1_all-seq.txt -s 1 -e 1 -d simple -o hA5_1.cluster
-   ```
-
-#### 3. Measure the enrichment of sequences with and without competitor
-
-Calculate enrichment in the conventional versus competitor experiment using `hops_enrich`.  Only include samples where the number of counts is six or great. 
-
-```
-hops_enrich hA5_conv_1.counts hA5_comp_1.counts -f hA5_1.cluster -m 6 -o hA5_1.enrich
 ```
 
 ## III. Figures
