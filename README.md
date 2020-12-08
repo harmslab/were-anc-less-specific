@@ -7,7 +7,8 @@ This repository contains the files and scripts necessary to reproduce the analys
 #### Contents
 
 + `download-and-count`: scripts that will allow reproduction of the `counts` files in `fig_2cd-s3-s4-s5` from Illumina fastq files uploaded to the NCBI SRA database. 
-+ `fig_2cd-s3-s4-s5` notebooks and scripts to reproduce peptide enrichment calculations.  Reproduces Fig 2C & D, S3, S4, and S5. 
++ `fig_2a` notebooks to reproduce weblogo in Fig 2A
++ `fig_2de-s3-s4-s5` notebooks and scripts to reproduce peptide enrichment calculations.  Reproduces Fig 2D & E, S3, S4, and S5. 
 + `fig_3-s6-s7-s8-s9` notebooks, scripts, and raw data to reproduce the peptide binding experimental analyses.  Reproduces Fig 3, S6, S7, S8, and S9. 
 + `fig_4-5` jupyter notebook and files to analyze set overlap (Venn diagrams and related).  Reproduces Fig 4 and 5. 
 + `fig_s2` jupyter notebook and files to reproduce figure S2 (identifying minimum read count cutoff)
